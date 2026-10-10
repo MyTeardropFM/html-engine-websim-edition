@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" w-tid="1">
+<head w-tid="3">
+    
+
+<link rel="stylesheet" href="https://api.websim.com/fonts.css?v=fdbfd9048e700bb1578a5375f68621a17e17c560">
+<style class="websim-injected websim-ios-mobile-fix">
+/* iOS zoom prevention and overscroll behavior - injected by WebSim */
+html, body {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+input, textarea, select {
+  font-size: max(1rem, 16px) !important;
+}
+</style>
+<script class="websim-injected">__WEBSIM_DATA__={"home":false,"hostOrigin":"https://websim.com","apiOrigin":"https://api.websim.com","isTopLevelFrame":false,"project_id":"kmliv7cvi6t56v2pgh1v","preview":true,"activityCaptureMode":"on","route":{"type":"project","id":"kmliv7cvi6t56v2pgh1v"},"baseUrl":"https://websim.com/p/kmliv7cvi6t56v2pgh1v"}</script>
+<script class="websim-injected" src="https://api.websim.com/dist/index.js?v=fdbfd9048e700bb1578a5375f68621a17e17c560"></script>
+<meta charset="UTF-8" w-tid="5"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" w-tid="7"/>
+    <title w-tid="9">HTML ENGINE v0.0.2</title>
+    <script src="https://cdn.tailwindcss.com" w-tid="11"></script>
+    <style w-tid="13">
+        * { box-sizing: border-box; }
+        body { background-color: #000000; color: #ffffff; font-family: monospace; overflow: hidden; margin: 0; padding: 0; width: 100vw; height: 100vh; }
+        canvas { display: block; background: #000000; width: 100%; height: 100%; touch-action: none; }
+    </style>
+</head>
+<body class="flex flex-col h-screen select-none" w-tid="15">
+
+    <header class="flex flex-wrap items-center justify-between px-3 py-2 bg-[#0b0e14] border-b border-gray-800 text-xs gap-2 z-10 shrink-0" w-tid="17">
+        <div class="flex items-center space-x-2" w-tid="19">
+            <span class="bg-indigo-600 text-white font-bold px-2 py-1 rounded text-[10px]" w-tid="21">HTML ENGINE v0.0.2</span>
+            <a href="https://github.com/SENAndrhevn23/html-engine" target="_blank" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-2.5 py-1 rounded text-[10px] flex items-center space-x-1 shadow transition-colors" w-tid="23">
+                <span w-tid="25">⭐ Star Us for Future Updates</span>
+            </a>
+        </div>
+        <div class="flex items-center space-x-2 overflow-x-auto py-1" w-tid="27">
+            <label class="cursor-pointer bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded flex items-center space-x-1 border border-gray-700 whitespace-nowrap text-[11px]" w-tid="29">
+                <span w-tid="31">🎵 Inst.ogg</span>
+                <input type="file" id="audioUpload" accept="audio/*" class="hidden" w-tid="33"/>
+            </label>
+            <label class="cursor-pointer bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded flex items-center space-x-1 border border-gray-700 whitespace-nowrap text-[11px]" w-tid="35">
+                <span w-tid="37">📁 Chart.json</span>
+                <input type="file" id="jsonUpload" accept=".json" class="hidden" w-tid="39"/>
+            </label>
+            <button id="playBtn" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded font-bold whitespace-nowrap text-[11px]" w-tid="41">▶ Play</button>
+            <button id="stressTestBtn" class="bg-purple-600 hover:bg-purple-500 px-2.5 py-1 rounded whitespace-nowrap text-[11px]" w-tid="43">150k Stress</button>
+        </div>
+    </header>
+
+    <div class="flex-1 relative flex items-center justify-center overflow-hidden w-full h-full" w-tid="45">
+        <canvas id="gameCanvas" w-tid="47"></canvas>
+        
+        <!-- HUD Overlay -->
+        <div class="absolute top-3 left-3 pointer-events-none text-[11px] space-y-0.5 z-10 bg-black/80 p-2 rounded border border-gray-800 shadow-xl" w-tid="49">
+            <div id="renderedNotesDisplay" class="text-emerald-400 font-bold" w-tid="51">Rendered Notes: 0</div>
+            <div id="fpsDisplay" class="text-cyan-400" w-tid="53">FPS: 60</div>
+            <div id="scoreDisplay" class="text-yellow-400" w-tid="55">Score: 0 | Combo: 0</div>
+            <div id="speedDisplay" class="text-indigo-300" w-tid="57">Scroll Speed: 2.2</div>
+            <div class="text-purple-400 font-semibold" w-tid="59">AUTOPLAYER & OPPONENT AUTO-HIT ACTIVE</div>
+        </div>
+    </div>
+
+    <footer class="flex items-center justify-between px-3 py-1 bg-[#0b0e14] border-t border-gray-800 text-[10px] text-gray-400 z-10 shrink-0" w-tid="61">
+        <div id="chunkStatus" w-tid="63">● Chunks: 0 Loaded | Notes: 0</div>
+        <div id="songNameDisplay" class="truncate max-w-[150px] sm:max-w-xs" w-tid="65">Song: None</div>
+        <div class="text-indigo-400 hidden sm:block" w-tid="67">Unified Batch Timeline & Strict Culling Active</div>
+    </footer>
+
+    <script w-tid="69">
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            const headerHeight = document.querySelector('header').offsetHeight;
+            const footerHeight = document.querySelector('footer').offsetHeight;
+            const displayWidth = window.innerWidth;
+            const displayHeight = window.innerHeight - headerHeight - footerHeight;
+
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+            canvas.style.width = displayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resize);
+
+        const assetUrls = {
+            leftArrow: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/LeftArrow.png',
+            downArrow: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/DownArrow.png',
+            upArrow: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/UpArrow.png',
+            rightArrow: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/RightArrow.png',
+            leftComing: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/LeftComing.png',
+            downComing: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/DownComing.png',
+            upComing: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/UpComing.png',
+            rightComing: 'https://raw.githubusercontent.com/SENAndrhevn23/fnf-rust-engine-1/refs/heads/master/Notes/RightComing.png'
+        };
+
+        const images = {};
+        for (let key in assetUrls) {
+            images[key] = new Image();
+            images[key].crossOrigin = "anonymous";
+            images[key].src = assetUrls[key];
+        }
+
+        let batchTimeline = {
+            notes: [],
+            chunks: [],
+            scrollSpeed: 2.2,
+            songName: "None"
+        };
+
+        let isPlaying = false;
+        let audio = new Audio();
+        let startTime = 0;
+        let pauseOffset = 0;
+        let score = 0;
+        let combo = 0;
+
+        const receptorTimers = { player: [0,0,0,0], opponent: [0,0,0,0] };
+
+        document.getElementById('audioUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                audio.src = URL.createObjectURL(file);
+                document.getElementById('songNameDisplay').innerText = `Song: ${file.name}`;
+            }
+        });
+
+        document.getElementById('jsonUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const rawData = JSON.parse(event.target.result);
+                        parseChartData(rawData);
+                    } catch (err) {
+                        alert("Error parsing JSON: " + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('stressTestBtn').addEventListener('click', () => {
+            generateStressTestChart();
+        });
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (!isPlaying) {
+                startPlayback();
+            } else {
+                pausePlayback();
+            }
+        });
+
+        function parseChartData(data) {
+            let songData = data.song || data;
+            batchTimeline.scrollSpeed = songData.speed || songData.scrollSpeed || 2.2;
+            batchTimeline.songName = songData.song || "Custom Chart";
+
+            let rawSections = songData.notes || [];
+            batchTimeline.chunks = rawSections;
+            batchTimeline.notes = [];
+
+            let noteId = 0;
+            rawSections.forEach((section) => {
+                let secNotes = section.sectionNotes || [];
+                secNotes.forEach(n => {
+                    let time = n[0];
+                    let dir = n[1] % 4;
+                    let mustHit = section.mustHitSection ? (n[1] < 4) : (n[1] >= 4);
+                    
+                    batchTimeline.notes.push({
+                        id: noteId++,
+                        time: time,
+                        dir: dir,
+                        player: mustHit ? 1 : 0,
+                        consumed: false
+                    });
+                });
+            });
+
+            // Sort chronologically for strict spatial window culling
+            batchTimeline.notes.sort((a, b) => a.time - b.time);
+
+            document.getElementById('chunkStatus').innerText = `● Chunks: ${batchTimeline.chunks.length} Loaded | Notes: ${batchTimeline.notes.length}`;
+            document.getElementById('songNameDisplay').innerText = `Song: ${batchTimeline.songName}`;
+            document.getElementById('speedDisplay').innerText = `Scroll Speed: ${batchTimeline.scrollSpeed}`;
+        }
+
+        function generateStressTestChart() {
+            batchTimeline.scrollSpeed = 2.5;
+            batchTimeline.songName = "Mega Stress Test (150k Notes)";
+            batchTimeline.chunks = new Array(100).fill({});
+            batchTimeline.notes = [];
+
+            let noteId = 0;
+            for (let i = 0; i < 150000; i++) {
+                batchTimeline.notes.push({
+                    id: noteId++,
+                    time: i * 50,
+                    dir: i % 4,
+                    player: (i % 2 === 0) ? 1 : 0,
+                    consumed: false
+                });
+            }
+
+            document.getElementById('chunkStatus').innerText = `● Chunks: 100 (Stress Test) | Notes: ${batchTimeline.notes.length}`;
+            document.getElementById('songNameDisplay').innerText = `Song: ${batchTimeline.songName}`;
+            document.getElementById('speedDisplay').innerText = `Scroll Speed: ${batchTimeline.scrollSpeed}`;
+
+            if (!audio.src) {
+                audio.src = "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg";
+            }
+        }
+
+        function startPlayback() {
+            if (batchTimeline.notes.length === 0) {
+                alert("Please load a chart JSON or click '150k Stress' first!");
+                return;
+            }
+            audio.play().catch(() => {});
+            startTime = performance.now() - pauseOffset;
+            isPlaying = true;
+            document.getElementById('playBtn').innerText = "⏸ Pause";
+            document.getElementById('playBtn').className = "bg-amber-600 hover:bg-amber-500 px-3 py-1 rounded font-bold text-[11px]";
+        }
+
+        function pausePlayback() {
+            audio.pause();
+            pauseOffset = performance.now() - startTime;
+            isPlaying = false;
+            document.getElementById('playBtn').innerText = "▶ Play";
+            document.getElementById('playBtn').className = "bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded font-bold text-[11px]";
+        }
+
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fps = 60;
+
+        function gameLoop(now) {
+            frameCount++;
+            if (now - lastTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastTime = now;
+                document.getElementById('fpsDisplay').innerText = `FPS: ${fps}`;
+            }
+
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+
+            // Pristine pitch-black background with NO white lane boxes
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+
+            let songTime = isPlaying ? (performance.now() - startTime) : pauseOffset;
+            if (isPlaying && audio.duration && audio.currentTime >= audio.duration) {
+                isPlaying = false;
+            }
+
+            const isMobile = width < 600;
+            const columnWidth = isMobile ? Math.min(38, (width / 9) - 2) : 56;
+            const playfieldGap = isMobile ? 30 : 80;
+            const totalWidth = (columnWidth * 4 * 2) + playfieldGap;
+            const startX = Math.max(10, (width - totalWidth) / 2);
+
+            const oppX = startX;
+            const playX = startX + (columnWidth * 4) + playfieldGap;
+            const receptorY = isMobile ? 45 : 80;
+            const noteSize = columnWidth;
+
+            const arrowKeys = ['leftArrow', 'downArrow', 'upArrow', 'rightArrow'];
+            const comingKeys = ['leftComing', 'downComing', 'upComing', 'rightComing'];
+
+            // Draw Opponent Receptors
+            for (let i = 0; i < 4; i++) {
+                let rx = oppX + (i * columnWidth);
+                let lit = receptorTimers.opponent[i] > songTime;
+                let imgKey = lit ? arrowKeys[i] : comingKeys[i];
+                if (images[imgKey] && images[imgKey].complete) {
+                    ctx.drawImage(images[imgKey], rx, receptorY, noteSize, noteSize);
+                }
+            }
+
+            // Draw Player Receptors
+            for (let i = 0; i < 4; i++) {
+                let rx = playX + (i * columnWidth);
+                let lit = receptorTimers.player[i] > songTime;
+                let imgKey = lit ? arrowKeys[i] : comingKeys[i];
+                if (images[imgKey] && images[imgKey].complete) {
+                    ctx.drawImage(images[imgKey], rx, receptorY, noteSize, noteSize);
+                }
+            }
+
+            // Strict spatial window culling & instant note consumption (zero splashes)
+            let renderedCount = 0;
+            const viewMin = songTime - 400;
+            const viewMax = songTime + 1200;
+            const noteSpeed = 0.45 * batchTimeline.scrollSpeed;
+
+            for (let i = 0; i < batchTimeline.notes.length; i++) {
+                let note = batchTimeline.notes[i];
+
+                if (note.consumed) continue;
+                if (note.time < viewMin) {
+                    if (songTime - note.time > 150) note.consumed = true;
+                    continue;
+                }
+                if (note.time > viewMax) break; // Early break for 150k+ notes performance
+
+                // Autoplayer & opponent auto-hitbox instant note consumption
+                if (note.time <= songTime) {
+                    note.consumed = true;
+                    if (note.player === 1) {
+                        receptorTimers.player[note.dir] = songTime + 80;
+                        score += 350;
+                        combo++;
+                    } else {
+                        receptorTimers.opponent[note.dir] = songTime + 80;
+                    }
+                    continue;
+                }
+
+                renderedCount++;
+                let pX = (note.player === 1 ? playX : oppX) + (note.dir * columnWidth);
+                let pY = receptorY + (note.time - songTime) * noteSpeed;
+
+                let noteImgKey = comingKeys[note.dir];
+                if (images[noteImgKey] && images[noteImgKey].complete) {
+                    ctx.drawImage(images[noteImgKey], pX, pY, noteSize, noteSize);
+                }
+            }
+
+            document.getElementById('renderedNotesDisplay').innerText = `Rendered Notes: ${renderedCount}`;
+            document.getElementById('scoreDisplay').innerText = `Score: ${score} | Combo: ${combo}`;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        resize();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
